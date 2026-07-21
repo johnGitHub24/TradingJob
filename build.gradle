@@ -1,0 +1,81 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.trading'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+def testJvmArgs = ['-Djdk.attach.allowAttachSelf=true', '-XX:+EnableDynamicAgentLoading']
+
+tasks.named('test') {
+    description = 'Runs unit tests (excludes @Tag integration)'
+    maxParallelForks = 1
+    jvmArgs = testJvmArgs
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests (@Tag integration)'
+    group = 'verification'
+    maxParallelForks = 1
+    jvmArgs = testJvmArgs
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    shouldRunAfter tasks.named('test')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest')
+}
+
+// 明確指定主類別，讓 Gradle bootRun 與 IntelliJ Spring Boot Run 一致辨識
+springBoot {
+    mainClass = 'com.trading.job.TradingJobApplication'
+}
+
+tasks.named('bootRun') {
+    group = 'application'
+    description = 'Run TradingJob with H2 (dev profile) at http://localhost:8084'
+    // 本機／IDE 預設走 H2；若需 PostgreSQL：--args='--spring.profiles.active=default' 或不要傳 profile
+    args = ['--spring.profiles.active=dev']
+}
+
+bootJar {
+    archiveBaseName = 'trading-job'
+}

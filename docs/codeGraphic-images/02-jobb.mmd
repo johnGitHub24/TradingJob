@@ -1,0 +1,5 @@
+flowchart LR
+  CRON2["@Scheduled JOB-B"] --> PSJ[PnlSnapshotJob]
+  PSJ --> PSS[PnlSnapshotService]
+  PSS --> PR[PositionRepository]
+  PSS --> SN[PnlSnapshotRepository]

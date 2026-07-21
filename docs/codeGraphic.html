@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradingJob — CodeGraphic</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root { --bg:#0f1419; --surface:#1a2332; --surface2:#243044; --border:#2d3a4f; --text:#e6edf3; --muted:#8b9cb3; --accent:#3b82f6; --accent2:#10b981; --warn:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"Segoe UI","Microsoft JhengHei",sans-serif; background:var(--bg); color:var(--text); line-height:1.6; min-height:100vh; }
+    .top { border-bottom:1px solid var(--border); background:linear-gradient(135deg,#1e3a5f 0%,#0f1419 70%); padding:1.5rem 2rem 0; }
+    .top h1 { font-size:1.5rem; margin-bottom:0.25rem; }
+    .top .sub { color:var(--muted); font-size:0.9rem; margin-bottom:1.25rem; }
+    .top .links a { color:var(--accent); text-decoration:none; margin-right:1rem; }
+    .tabs { display:flex; flex-wrap:wrap; gap:0.35rem; }
+    .tab { appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--muted); padding:0.55rem 1.1rem; border-radius:8px 8px 0 0; cursor:pointer; font-size:0.9rem; border-bottom:none; }
+    .tab.active { background:var(--bg); color:var(--accent2); border-color:var(--accent); box-shadow:inset 0 2px 0 var(--accent); }
+    main { padding:1.5rem 2rem 3rem; max-width:1100px; }
+    .panel { display:none; } .panel.active { display:block; }
+    .panel h2 { font-size:1.2rem; border-bottom:2px solid var(--accent); padding-bottom:0.4rem; margin-bottom:0.75rem; }
+    .blurb { color:#c9d4e3; font-size:0.92rem; margin-bottom:1rem; }
+    .blurb li { margin-left:1.1rem; margin-bottom:0.25rem; }
+    .mermaid { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.25rem; overflow-x:auto; }
+    .note { margin-top:1rem; background:var(--surface2); border-left:3px solid var(--warn); padding:0.65rem 0.9rem; font-size:0.85rem; color:var(--muted); }
+    footer { padding:0 2rem 2rem; color:var(--muted); font-size:0.8rem; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>TradingJob — CodeGraphic</h1>
+    <p class="sub">圖為主 · JOB-A~D 排程 · 逾時取消 · PnL 快照 · DLQ 重試</p>
+    <p class="links">
+      <a href="md-viewer.html?src=../TradingJob-SPEC.md">規格書（權威）</a>
+      <a href="md-viewer.html?src=architecture.md">architecture.md</a>
+      <a href="md-viewer.html?src=%E5%8A%9F%E8%83%BD%E6%B5%81%E7%A8%8B%E8%AA%AA%E6%98%8E.md">功能流程說明</a>
+      <a href="swagger.html">API 文件（Swagger）</a>
+    </p>
+    <nav class="tabs">
+      <button type="button" class="tab active" data-tab="joba">JOB-A</button>
+      <button type="button" class="tab" data-tab="jobb">JOB-B</button>
+      <button type="button" class="tab" data-tab="jobcd">JOB-C/D</button>
+      <button type="button" class="tab" data-tab="runtime">Runtime</button>
+    </nav>
+  </header>
+  <main>
+    <section id="panel-joba" class="panel active">
+      <h2>JOB-A — 逾時未成交取消</h2>
+      <ul class="blurb">
+        <li><code>StaleOrderTimeoutJob</code> @Scheduled cron。</li>
+        <li><code>StaleOrderCancellationService</code> 找逾時 NEW 訂單。</li>
+        <li>狀態轉 CANCELLED + 寫 order_events。</li>
+        <li>手動觸發：<code>JobController</code> 同 Service 路徑。</li>
+      </ul>
+      <div class="mermaid">
+flowchart LR
+  CRON["@Scheduled JOB-A"] --> SOJ[StaleOrderTimeoutJob]
+  HTTP[POST /jobs/...] --> JC[JobController]
+  SOJ --> SOS[StaleOrderCancellationService]
+  JC --> SOS
+  SOS --> OR[OrderRepository]
+      </div>
+      <p class="note">Scheduler 只呼叫 Service，不含商業邏輯。</p>
+    </section>
+    <section id="panel-jobb" class="panel" hidden>
+      <h2>JOB-B — PnL 日結快照</h2>
+      <ul class="blurb">
+        <li><code>PnlSnapshotJob</code> 定時執行。</li>
+        <li><code>PnlSnapshotService</code> 彙總持倉／PnL。</li>
+        <li>寫入 <code>pnl_snapshots</code> 表。</li>
+        <li>與 Engine 共用 DB schema（正式環境）。</li>
+      </ul>
+      <div class="mermaid">
+flowchart LR
+  CRON2["@Scheduled JOB-B"] --> PSJ[PnlSnapshotJob]
+  PSJ --> PSS[PnlSnapshotService]
+  PSS --> PR[PositionRepository]
+  PSS --> SN[PnlSnapshotRepository]
+      </div>
+      <p class="note">本機 dev：H2 :8084，不假設 Engine 已啟動。</p>
+    </section>
+    <section id="panel-jobcd" class="panel" hidden>
+      <h2>JOB-C/D — DLQ 重試與清理</h2>
+      <ul class="blurb">
+        <li>JOB-C：<code>FailedCommandRetryJob</code> → DLQ 重放。</li>
+        <li><code>OrderReplayPort</code> 可選 HTTP 呼叫 Engine。</li>
+        <li>JOB-D：<code>DataCleanupJob</code> 清理舊 events／failed_commands。</li>
+        <li>保留天數由 <code>JobProperties</code> 設定。</li>
+      </ul>
+      <div class="mermaid">
+flowchart TB
+  FCJ[FailedCommandRetryJob] --> FCS[FailedCommandService]
+  FCS --> FCR[FailedCommandRepository]
+  FCS --> ORP[OrderReplayPort]
+  ORP --> ENG[Engine HTTP optional]
+  DCJ[DataCleanupJob] --> DCS[DataCleanupService]
+  DCS --> EV[order_events cleanup]
+      </div>
+      <p class="note">詳述 <code>docs/Task用法.md</code> 排程設定。</p>
+    </section>
+    <section id="panel-runtime" class="panel" hidden>
+      <h2>Runtime — 排程與分層</h2>
+      <ul class="blurb">
+        <li><code>ThreadPoolTaskScheduler</code> pool-size 預設 4。</li>
+        <li>dev :8084 H2；prod :8083 PostgreSQL。</li>
+        <li>分層：api / application / scheduler / client / infrastructure。</li>
+        <li>驗證：<code>.\gradlew.bat check</code>。</li>
+      </ul>
+      <div class="mermaid">
+flowchart TB
+  subgraph trig [Triggers]
+    SCH["@Scheduled"]
+    API[JobController]
+  end
+  subgraph app [application]
+    SVC[Job Services]
+  end
+  subgraph data [infrastructure]
+    REPO[Repositories]
+  end
+  SCH --> SVC
+  API --> SVC
+  SVC --> REPO
+      </div>
+      <p class="note">Package 根：<code>com.trading.job</code>。</p>
+    </section>
+  </main>
+  <footer>CodeGraphic · 非權威 · 衝突以規格書為準 · Mermaid CDN</footer>
+  <script>
+    mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "loose" });
+    const panels = { joba: document.getElementById("panel-joba"), jobb: document.getElementById("panel-jobb"), jobcd: document.getElementById("panel-jobcd"), runtime: document.getElementById("panel-runtime") };
+    const rendered = new Set(["joba"]);
+    async function renderPanel(id) { if (rendered.has(id)) return; await mermaid.run({ nodes: panels[id].querySelectorAll(".mermaid") }); rendered.add(id); }
+    mermaid.run({ nodes: panels.joba.querySelectorAll(".mermaid") });
+    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", async () => {
+      const id = tab.dataset.tab;
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
+      Object.entries(panels).forEach(([k, p]) => { p.classList.toggle("active", k === id); p.hidden = k !== id; });
+      await renderPanel(id);
+    }));
+  </script>
+</body>
+</html>

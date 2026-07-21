@@ -1,0 +1,6 @@
+flowchart LR
+  CRON["@Scheduled JOB-A"] --> SOJ[StaleOrderTimeoutJob]
+  HTTP[POST /jobs/...] --> JC[JobController]
+  SOJ --> SOS[StaleOrderCancellationService]
+  JC --> SOS
+  SOS --> OR[OrderRepository]

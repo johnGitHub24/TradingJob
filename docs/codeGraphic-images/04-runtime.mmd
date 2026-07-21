@@ -1,0 +1,14 @@
+flowchart TB
+  subgraph trig [Triggers]
+    SCH["@Scheduled"]
+    API[JobController]
+  end
+  subgraph app [application]
+    SVC[Job Services]
+  end
+  subgraph data [infrastructure]
+    REPO[Repositories]
+  end
+  SCH --> SVC
+  API --> SVC
+  SVC --> REPO

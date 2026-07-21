@@ -1,0 +1,7 @@
+flowchart TB
+  FCJ[FailedCommandRetryJob] --> FCS[FailedCommandService]
+  FCS --> FCR[FailedCommandRepository]
+  FCS --> ORP[OrderReplayPort]
+  ORP --> ENG[Engine HTTP optional]
+  DCJ[DataCleanupJob] --> DCS[DataCleanupService]
+  DCS --> EV[order_events cleanup]
