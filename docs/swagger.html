@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>TradingJob — API 文件（Swagger UI）</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css"/>
+  <style>
+    :root { --bg:#0f1419; --surface:#1a2332; --surface2:#243044; --border:#2d3a4f; --text:#e6edf3; --muted:#8b9cb3; --accent:#3b82f6; --accent2:#10b981; --warn:#f59e0b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#fafafa; font-family:"Segoe UI","Microsoft JhengHei",sans-serif; }
+    header.intro { background:linear-gradient(135deg,#1e3a5f 0%,#0f1419 70%); color:var(--text); padding:1.5rem 2rem; line-height:1.6; }
+    header.intro h1 { font-size:1.4rem; margin:0 0 0.25rem; }
+    header.intro .sub { color:var(--muted); font-size:0.9rem; margin:0 0 1rem; }
+    header.intro .links a { color:var(--accent); text-decoration:none; margin-right:1rem; font-size:0.9rem; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:0.75rem; margin-top:0.5rem; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0.8rem 1rem; font-size:0.85rem; }
+    .card h2 { font-size:0.85rem; color:var(--accent2); margin:0 0 0.5rem; }
+    .card table { width:100%; border-collapse:collapse; }
+    .card td { padding:0.15rem 0.3rem 0.15rem 0; color:#c9d4e3; vertical-align:top; }
+    .card td:first-child { color:var(--muted); white-space:nowrap; }
+    .card code { background:#0d1117; color:#79c0ff; padding:0.1rem 0.35rem; border-radius:4px; font-size:0.85em; }
+    .card ul { margin:0; padding-left:1.1rem; color:#c9d4e3; }
+    .card li { margin-bottom:0.2rem; }
+    .note { margin-top:0.75rem; background:var(--surface2); border-left:3px solid var(--warn); padding:0.6rem 0.9rem; font-size:0.82rem; color:var(--muted); border-radius:0 8px 8px 0; }
+    .note code { background:#0d1117; color:#79c0ff; padding:0.1rem 0.35rem; border-radius:4px; }
+    #swagger-ui { max-width:1200px; margin:0 auto; }
+  </style>
+</head>
+<body>
+<header class="intro">
+  <h1>TradingJob — API 文件</h1>
+  <p class="sub">排程任務：JOB-A 逾時取消 · JOB-B PnL 快照 · JOB-C 失敗重試 · JOB-D 資料清理 · Spring Boot 3 · Java 21 · @Scheduled</p>
+  <p class="links">
+    <a href="codeGraphic.html">CodeGraphic</a>
+    <a href="architecture.html">architecture.md</a>
+    <a href="Task用法.html">Task 用法</a>
+    <a href="http://localhost:8084/swagger-ui.html" target="_blank">Runtime Swagger UI（:8084 dev）</a>
+  </p>
+  <div class="cards">
+    <div class="card">
+      <h2>啟動與位址</h2>
+      <table>
+        <tr><td>啟動（dev／H2）</td><td><code>.\gradlew.bat bootRun</code>（預設 <code>dev</code> profile，H2，免 PostgreSQL）</td></tr>
+        <tr><td>Port</td><td><b><code>8084</code></b>（dev profile；default yml 為 <code>8083</code>，走 PostgreSQL 與 Engine 共用 DB）</td></tr>
+        <tr><td>OpenAPI JSON</td><td><code>http://localhost:8084/v3/api-docs</code></td></tr>
+        <tr><td>Swagger UI</td><td><code>http://localhost:8084/swagger-ui.html</code></td></tr>
+        <tr><td>H2 Console</td><td><code>http://localhost:8084/h2-console</code>（JDBC <code>jdbc:h2:mem:tradingjob</code>，帳號 <code>sa</code>，密碼空白）</td></tr>
+        <tr><td>驗證</td><td><code>.\gradlew.bat check</code>（unit + integration）</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>API 分組（實際 Controller）</h2>
+      <ul>
+        <li><b>Jobs 手動觸發</b>：<code>POST /api/v1/jobs/stale-order-cancellation</code>（JOB-A）、<code>POST /api/v1/jobs/pnl-snapshot</code>（JOB-B）、<code>POST /api/v1/jobs/failed-command-retry</code>（JOB-C）、<code>POST /api/v1/jobs/cleanup</code>（JOB-D）</li>
+        <li><b>查詢</b>：<code>GET /api/v1/pnl-snapshots</code>、<code>GET /api/v1/failed-commands</code></li>
+        <li>四個 Job 另有 cron 排程（<code>trading.job.*</code> 設定；dev profile 縮短為每 1～5 分鐘方便觀察）。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>認證與範例流程</h2>
+      <ul>
+        <li>無認證（無 Spring Security／JWT），啟動後可直接呼叫。</li>
+        <li>範例：<code>POST /api/v1/jobs/pnl-snapshot</code> 手動觸發快照 → <code>GET /api/v1/pnl-snapshots</code> 查結果；<code>POST /api/v1/jobs/failed-command-retry</code> → <code>GET /api/v1/failed-commands</code> 看重試佇列。</li>
+        <li>正式環境（default yml，:8083）與 Engine 共用 PostgreSQL；本機驗證用 dev／H2，不假設 Engine 已啟動。</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">
+    本頁載入 <code>http://localhost:8084/v3/api-docs</code>（dev profile 實際埠）。若你以 default profile 啟動（PostgreSQL），埠為 <code>8083</code>，請自行改網址。
+    若以 <code>file://</code> 直接開啟本頁而無法載入，請改用 <code>http://localhost:8084/swagger-ui.html</code>，或在 docs 目錄啟一個靜態伺服器（例如 <code>python -m http.server</code>）。
+  </p>
+</header>
+<div id="swagger-ui"></div>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js" crossorigin></script>
+<script>
+  window.onload = function () {
+    window.ui = SwaggerUIBundle({
+      url: "http://localhost:8084/v3/api-docs",
+      dom_id: "#swagger-ui",
+      deepLinking: true,
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+      plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+      layout: "StandaloneLayout"
+    });
+  };
+</script>
+</body>
+</html>

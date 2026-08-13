@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spring Boot Cron / Task 用法（TradingJob）</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg:#0f1419; --surface:#1a2332; --surface2:#243044; --border:#2d3a4f;
+      --text:#e6edf3; --muted:#8b9cb3; --accent:#3b82f6; --accent2:#10b981; --warn:#f59e0b;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family:"Segoe UI","Microsoft JhengHei",sans-serif;
+      background:var(--bg); color:var(--text); line-height:1.65;
+    }
+    .bar {
+      position:sticky; top:0; z-index:10;
+      display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem;
+      padding:0.75rem 1.25rem; background:var(--surface);
+      border-bottom:1px solid var(--border);
+    }
+    .bar a { color:var(--accent); text-decoration:none; }
+    .bar .src { color:var(--muted); font-size:0.85rem; }
+    .bar .badge {
+      font-size:0.75rem; color:var(--warn); border:1px solid var(--warn);
+      border-radius:4px; padding:0.1rem 0.45rem;
+    }
+    main { max-width:880px; margin:0 auto; padding:1.5rem 1.25rem 3rem; }
+    h1,h2,h3,h4 { line-height:1.3; }
+    h1 { font-size:1.7rem; border-bottom:2px solid var(--accent); padding-bottom:0.4rem; }
+    h2 { font-size:1.3rem; margin-top:1.75rem; border-bottom:1px solid var(--border); padding-bottom:0.3rem; }
+    h3 { font-size:1.1rem; margin-top:1.25rem; color:var(--accent2); }
+    a { color:var(--accent); }
+    code, pre { font-family:Consolas,"Courier New",monospace; }
+    code { background:var(--surface2); padding:0.1rem 0.35rem; border-radius:4px; font-size:0.9em; }
+    pre { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1rem; overflow-x:auto; }
+    pre code { background:transparent; padding:0; }
+    table { border-collapse:collapse; width:100%; margin:1rem 0; font-size:0.92rem; }
+    th, td { border:1px solid var(--border); padding:0.45rem 0.65rem; text-align:left; }
+    th { background:var(--surface2); }
+    blockquote {
+      margin:1rem 0; padding:0.5rem 0.9rem; border-left:3px solid var(--warn);
+      background:var(--surface2); color:var(--muted);
+    }
+    .mermaid { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem; overflow-x:auto; }
+    hr { border:none; border-top:1px solid var(--border); margin:1.5rem 0; }
+    footer { max-width:880px; margin:0 auto; padding:0 1.25rem 2rem; color:var(--muted); font-size:0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <a href="codeGraphic.html">← CodeGraphic</a>
+    <span class="badge">companion HTML</span>
+    <span class="src">來源（權威）：Task用法.md</span>
+  </div>
+  <main>
+<h1>Spring Boot Cron / Task 用法（TradingJob）</h1>
+<h2>核心概念</h2>
+<table>
+<thead>
+<tr>
+  <th>元件</th>
+  <th>角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>@EnableScheduling</code></td>
+  <td>開啟排程掃描</td>
+</tr>
+<tr>
+  <td><code>@Scheduled(cron = &quot;...&quot;)</code></td>
+  <td>宣告 cron 任務（JOB-A~D）</td>
+</tr>
+<tr>
+  <td><code>TaskScheduler</code></td>
+  <td>實際執行任務的排程器</td>
+</tr>
+<tr>
+  <td><code>ThreadPoolTaskScheduler</code></td>
+  <td>執行緒池版 TaskScheduler（本專案採用）</td>
+</tr>
+<tr>
+  <td><code>SchedulingConfigurer</code></td>
+  <td>把自訂 TaskScheduler 掛到 Spring</td>
+</tr>
+</tbody>
+</table>
+<p>預設若不自訂，Spring 使用<strong>單執行緒</strong> scheduler，長任務會堵住其他 cron。</p>
+<h2>本專案設定</h2>
+<pre><code class="language-yaml">trading.job.scheduler:
+  pool-size: 4
+  thread-name-prefix: trading-job-
+</code></pre>
+<p>實作：<code>SchedulingConfig</code> 建立 <code>ThreadPoolTaskScheduler</code> Bean，並在 <code>configureTasks</code> 註冊。</p>
+<p>Job 類別（例：<code>DataCleanupJob</code>）只呼叫 Service，不碰 Repository —— 符合 EOS 分層。</p>
+<h2>手動觸發（驗證用）</h2>
+<p>排程以外，可用 HTTP 立即跑一次：</p>
+<pre><code class="language-http">POST /api/v1/jobs/stale-order-cancellation
+POST /api/v1/jobs/pnl-snapshot
+POST /api/v1/jobs/failed-command-retry
+POST /api/v1/jobs/cleanup
+</code></pre>
+<h2>本機跑通</h2>
+<pre><code class="language-powershell">.\gradlew.bat check
+.\gradlew.bat bootRun --args=&#x27;--spring.profiles.active=dev&#x27;
+# health: http://localhost:8084/actuator/health
+</code></pre>
+
+  </main>
+  <footer>由 eos-minimal/hooks/md-to-companion-html 產生 · 請改 .md 後重跑腳本 · 勿當權威契約</footer>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "loose" });
+  </script>
+</body>
+</html>
