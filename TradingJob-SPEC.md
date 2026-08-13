@@ -1,7 +1,7 @@
 # TradingJob Specification
 
 > **Authority contract.** Conflicts resolve to this file.  
-> EOS docs standard: EngineeringOS `eos-minimal/knowledge/documentation.md` @ 0.1.4
+> EOS docs standard: EngineeringOS `eos-minimal/knowledge/documentation.md` @ 0.1.10
 
 ## 0. Document map
 
@@ -12,10 +12,10 @@
 | [CLAUDE.md](CLAUDE.md) | Thin AI rules |
 | [docs/architecture.md](docs/architecture.md) | Layers / modules / runtime |
 | [docs/testing.md](docs/testing.md) | Test layers / DoD |
-| [docs/測試與CI.md](docs/測試與CI.md) | Commands / Gradle tasks |
+| [docs/testing.md](docs/testing.md) | Commands / Gradle tasks |
 | [docs/資料庫設計.md](docs/資料庫設計.md) | Tables / Entity map |
 | [docs/驗證設計.md](docs/驗證設計.md) | Business rules（no JWT） |
-| [docs/功能流程說明.md](docs/功能流程說明.md) | JOB-A~D flows |
+| [docs/architecture.md](docs/architecture.md) | JOB-A~D flows |
 | [docs/Task用法.md](docs/Task用法.md) | `@Scheduled` + ThreadPoolTaskScheduler |
 
 ## 1. Scope
@@ -58,9 +58,10 @@ Scheduler pool：`trading.job.scheduler.pool-size`（預設 4）。
 
 ## 4. Test DoD
 
-- [x] `.\gradlew.bat check` 全綠（unit + `@Tag("integration")`）
-- [x] 各 Job Service 有單元測試；Controller 有 MockMvc／單元覆蓋
-- [x] 整合測試覆蓋 JOB-A~D 主路徑
+- [x] `.\scripts\check.ps1` 全綠（JDK 21 → unit + `@Tag("integration")`）
+- [x] 各公開 Job Service ≥1 單元；Controller WebMvc 單元 + API 整合（Happy + ≥1 錯誤）
+- [x] 整合測試覆蓋 JOB-A~D 主路徑；Case ID 與單元層成對
+- [x] 本機 Demo 僅 Gradle `bootRun`（:8084／`dev`／H2）；**勿**用 `*Application` 綠箭
 - [ ] 正式環境連 PostgreSQL／Engine 的 smoke（部署時另驗）
 
 ## 5. Changelog
@@ -68,4 +69,5 @@ Scheduler pool：`trading.job.scheduler.pool-size`（預設 4）。
 | Date | Note |
 |------|------|
 | 2026-07-10 | EOS skeleton |
-| 2026-07-10 | 依實作補齊 SPEC／架構／測試／DB／流程（EOS 0.1.4） |
+| 2026-07-10 | 依實作補齊 SPEC／架構／測試／DB／流程（EOS 0.1.10） |
+| 2026-08-13 | 成對 Case ID；check.ps1 閘門；bootRun-only Demo |

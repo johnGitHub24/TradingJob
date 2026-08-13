@@ -1,16 +1,16 @@
-﻿# TradingJob — 專案規則（薄）
+# TradingJob — 專案規則（薄）
 
-繼承：EngineeringOS eos-minimal @ 0.1.5  
-公版路徑：`d:\ClaudeCode\EngineeringOS\eos-minimal\`  
+繼承：EngineeringOS eos-minimal @ **0.1.10**  
+公版：`EngineeringOS/eos-minimal/`  
 權威規格：[TradingJob-SPEC.md](TradingJob-SPEC.md)
 
 ## 與公版差異
 
-- Backend port: 8083（prod/default）· 8084（`dev` profile / H2）
+- Backend port: 8083（prod/default）· **8084**（`dev` profile / H2）
 - Framework: Spring Boot 3.2 · Java 21 · `@Scheduled` + `ThreadPoolTaskScheduler`
 - DB: PostgreSQL（預設）· H2（`test` / `dev`）
-- 驗證入口：`.\gradlew.bat check`（unit + integration）
-- 本機 demo：`.\gradlew.bat bootRun`（預設 `dev`／H2；詳見 `docs/IntelliJ-IDE-啟動設定.md`）
+- 驗證入口：`.\scripts\check.ps1`（載入 JDK 21 後 `gradlew check`＝unit + integration）
+- 本機 Demo：IntelliJ／終端 **Gradle `bootRun`**（**勿**對 `*Application` 綠箭頭；Windows 易 0xC0000005）→ http://localhost:8084
 
 ## 本專案專屬
 
@@ -20,9 +20,8 @@
 
 ## 註解深度
 - comment_verbosity: **detailed**
-- 權威：`EngineeringOS/eos-minimal/knowledge/comments.md` §0／§3b（eos-minimal @ 0.1.5）
+- 權威：`EngineeringOS/eos-minimal/knowledge/comments.md` §0／§3b（eos-minimal @ 0.1.10）
 - 結構：【職責】【技巧】【概念】；簡單 getter 可併入類別說明
-
 
 ## Git Remote
 - 帳號：`johnGitHub24`；一專案一 repo

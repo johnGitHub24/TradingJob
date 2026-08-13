@@ -70,6 +70,13 @@ springBoot {
 }
 
 tasks.named('bootRun') {
+    jvmArgs = [
+            '-Dfile.encoding=UTF-8',
+            '-Dstdout.encoding=UTF-8',
+            '-Dstderr.encoding=UTF-8',
+            '-Dsun.stdout.encoding=UTF-8',
+            '-Dsun.stderr.encoding=UTF-8'
+    ]
     group = 'application'
     description = 'Run TradingJob with H2 (dev profile) at http://localhost:8084'
     // 本機／IDE 預設走 H2；若需 PostgreSQL：--args='--spring.profiles.active=default' 或不要傳 profile
@@ -78,4 +85,8 @@ tasks.named('bootRun') {
 
 bootJar {
     archiveBaseName = 'trading-job'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }

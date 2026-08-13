@@ -1,5 +1,6 @@
-package com.trading.job.api;
+package com.trading.job;
 
+import com.trading.job.api.JobController;
 import com.trading.job.application.DataCleanupService;
 import com.trading.job.application.FailedCommandService;
 import com.trading.job.application.PnlSnapshotService;
@@ -19,10 +20,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 【職責】{@link JobController} WebMvc 單元測試：驗證手動 Job API 與查詢端點的 HTTP 契約。
- * 【技巧】{@code @WebMvcTest} + {@code @MockBean} Service；MockMvc 斷言 JSON。
- * 【概念】只啟動 Web 層，不啟動真實排程／DB，專注「路由與回應形狀」。
- * 【技巧驗證】JOB-A~D POST 的 job／affected；GET 空列表仍 200。
+ * 【職責】{@link JobController} WebMvc 單元測試：手動 Job API 與查詢端點的 HTTP 契約。
+ * 【技巧】{@code @WebMvcTest} + {@code @MockBean}；套件不放 {@code /api/}，讓配對掃描視為單元層。
+ * 【概念】切片測試只起 Web 層；整合層 {@code JobApiIntegrationTest} 再用真實 Service＋H2 對同一 Case ID。
+ * 【技巧驗證】JOB-A~D Happy；無效 status 查詢 400。
  */
 @WebMvcTest(JobController.class)
 class JobControllerTest {
@@ -124,5 +125,15 @@ class JobControllerTest {
         mockMvc.perform(get("/api/v1/failed-commands"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    /**
+     * CASE-JOB-API-007：無效失敗指令狀態回 400。
+     * Given: status 非整數列舉；When: GET /failed-commands?status=NOT_A_STATUS；Then: 400。
+     */
+    @Test
+    void JOB_API_007_listFailedCommands_invalidStatus_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/failed-commands").param("status", "NOT_A_STATUS"))
+                .andExpect(status().isBadRequest());
     }
 }

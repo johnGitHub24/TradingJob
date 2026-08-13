@@ -73,4 +73,23 @@ class DataCleanupServiceTest {
         assertThat(captor.getValue())
                 .containsExactlyInAnyOrder(FailedCommandStatus.SUCCEEDED, FailedCommandStatus.DEAD);
     }
+
+    /**
+     * CASE-JOB-CLEAN-003：清除過期終態失敗指令、保留 PENDING。
+     * Given: Repository 回報刪 2 筆失敗指令；When: cleanup；Then: deletedFailedCommands=2 且傳入狀態不含 PENDING。
+     */
+    @Test
+    void JOB_CLEAN_003_FAILED_COMMANDS_purgesTerminalKeepsPendingOutOfFilter() {
+        when(orderEventRepository.deleteByCreatedAtBefore(any())).thenReturn(0);
+        ArgumentCaptor<Collection<FailedCommandStatus>> captor = ArgumentCaptor.forClass(Collection.class);
+        when(failedCommandRepository.deleteByStatusInAndUpdatedAtBefore(captor.capture(), any(OffsetDateTime.class)))
+                .thenReturn(2);
+
+        DataCleanupService.CleanupResult result = service.cleanup();
+
+        assertThat(result.deletedFailedCommands()).isEqualTo(2);
+        assertThat(captor.getValue()).doesNotContain(FailedCommandStatus.PENDING);
+        assertThat(captor.getValue())
+                .containsExactlyInAnyOrder(FailedCommandStatus.SUCCEEDED, FailedCommandStatus.DEAD);
+    }
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>功能流程說明 — TradingJob</title>
+  <title>CodeGraphic image export</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <style>
     :root {
@@ -51,63 +51,43 @@
 </head>
 <body>
   <div class="bar">
-    <a href="codeGraphic.html">← CodeGraphic</a>
+    <a href="docs/codeGraphic.html">← CodeGraphic</a>
     <span class="badge">companion HTML</span>
-    <span class="src">來源（權威）：功能流程說明.md</span>
+    <span class="src">來源（權威）：README.md</span>
   </div>
   <main>
-<h1>功能流程說明 — TradingJob</h1>
-<blockquote>
-<p>衝突以主規格為準。</p>
-</blockquote>
-<h2>流程清單</h2>
+<h1>CodeGraphic image export</h1>
+<p>Source: docs/codeGraphic.html
+Tool: @mermaid-js/mermaid-cli@11 (dark)
+Script: EngineeringOS/eos-minimal/hooks/export-codeGraphic-images.ps1</p>
 <table>
 <thead>
 <tr>
-  <th>ID</th>
-  <th>流程</th>
-  <th>入口</th>
-  <th>結果</th>
+  <th>File</th>
+  <th>Tab</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>F-A</td>
-  <td>逾時取消</td>
-  <td>Cron JOB-A / <code>POST .../stale-order-cancellation</code></td>
-  <td>取消筆數</td>
+  <td><code>01-joba.svg</code> / <code>.png</code></td>
+  <td>JOB-A</td>
 </tr>
 <tr>
-  <td>F-B</td>
-  <td>PnL 快照</td>
-  <td>Cron JOB-B / <code>POST .../pnl-snapshot</code></td>
-  <td>寫入快照筆數</td>
+  <td><code>02-jobb.svg</code> / <code>.png</code></td>
+  <td>JOB-B</td>
 </tr>
 <tr>
-  <td>F-C</td>
-  <td>失敗重試</td>
-  <td>Cron JOB-C / <code>POST .../failed-command-retry</code></td>
-  <td>重放成功筆數</td>
+  <td><code>03-jobcd.svg</code> / <code>.png</code></td>
+  <td>JOB-C/D</td>
 </tr>
 <tr>
-  <td>F-D</td>
-  <td>資料清理</td>
-  <td>Cron JOB-D / <code>POST .../cleanup</code></td>
-  <td>刪除事件＋失敗指令</td>
+  <td><code>04-runtime.svg</code> / <code>.png</code></td>
+  <td>Runtime</td>
 </tr>
 </tbody>
 </table>
-<h2>F-A 步驟</h2>
-<pre><code class="language-text">1. Scheduler / Client → StaleOrderTimeoutJob 或 JobController
-2. StaleOrderCancellationService 查逾時未成交訂單（timeout-seconds、batch-size）
-3. 更新狀態為取消並寫事件（若有）
-4. 回傳 JobRunResponse
-</code></pre>
-<h2>F-C 步驟（含外部）</h2>
-<pre><code class="language-text">1. FailedCommandService 取出到期 PENDING／可重試指令
-2. OrderReplayPort 重放下單（本機 InProcess 或 Engine HTTP）
-3. 成功→終態；失敗→ attempts++、排程 next_retry_at；超過 max-attempts → 終態失敗
-</code></pre>
+<p>Re-run from project root (relative hook; do not use ClaudeCode / start.ps1):</p>
+<pre><code>&amp; &quot;..\EngineeringOS\eos-minimal\hooks\export-codeGraphic-images.ps1&quot; -ProjectRoot .</code></pre>
 
   </main>
   <footer>由 eos-minimal/hooks/md-to-companion-html 產生 · 請改 .md 後重跑腳本 · 勿當權威契約</footer>

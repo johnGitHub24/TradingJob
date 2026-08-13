@@ -69,6 +69,24 @@ class DataCleanupJobIntegrationTest {
     }
 
     /**
+     * CASE-JOB-CLEAN-002：僅清除終態失敗指令（SUCCEEDED／DEAD）。
+     * Given: 過期 DEAD 與過期 PENDING；When: cleanup；Then: 只刪 DEAD、PENDING 仍在。
+     */
+    @Test
+    void JOB_CLEAN_002_onlyPurgesTerminalFailedCommands() {
+        FailedCommandEntity dead = saveCommand(FailedCommandStatus.DEAD);
+        FailedCommandEntity pending = saveCommand(FailedCommandStatus.PENDING);
+        jdbcTemplate.update("UPDATE failed_commands SET updated_at = ? WHERE id IN (?, ?)",
+                OffsetDateTime.now().minusDays(8), dead.getId(), pending.getId());
+
+        DataCleanupService.CleanupResult result = dataCleanupService.cleanup();
+
+        assertThat(result.deletedFailedCommands()).isEqualTo(1);
+        assertThat(failedCommandRepository.findById(dead.getId())).isEmpty();
+        assertThat(failedCommandRepository.findById(pending.getId())).isPresent();
+    }
+
+    /**
      * CASE-JOB-CLEAN-001：刪除過期事件、保留近期事件。
      * Given: 一筆 31 天前事件 + 一筆近期；When: cleanup；Then: 僅刪舊事件。
      */

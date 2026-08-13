@@ -36,3 +36,7 @@ trading:
     cleanup:
       enabled: true
       cron: "0 */5 * * * *"
+startup:
+  info:
+    h2: true
+    probe: true

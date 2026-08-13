@@ -1,24 +1,32 @@
+# All hidden files/dirs - local only (exception: this file)
+.*
+!.gitignore
+
+!.github/
+!.github/**
 # Build
 build/
-.gradle/
 out/
 bin/
 
-# IDE（保留可共用的 Run Configuration）
-.idea/*
-!.idea/runConfigurations/
+# IDE
 *.iml
-.vscode/
 
-# JVM crash logs
+# Logs
+*.log
 hs_err_pid*.log
+replay_pid*.log
+bash.exe.stackdump
 
-# OS
-.DS_Store
+# Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# Archives / Python / OS
+*.zip
+**/__pycache__/
+*.pyc
 Thumbs.db
 
-# eos-minimal onboard
-node_modules/
-bash.exe.stackdump
-.env
-replay_pid*.log

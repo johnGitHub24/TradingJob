@@ -1,6 +1,8 @@
 package com.trading.job.integration;
 
+import com.trading.job.application.OrderEventService;
 import com.trading.job.application.StaleOrderCancellationService;
+import com.trading.job.domain.OrderEventType;
 import com.trading.job.domain.OrderSide;
 import com.trading.job.domain.OrderStatus;
 import com.trading.job.infrastructure.entity.OrderEntity;
@@ -32,6 +34,9 @@ class StaleOrderTimeoutJobIntegrationTest {
 
     @Autowired
     private StaleOrderCancellationService staleOrderCancellationService;
+
+    @Autowired
+    private OrderEventService orderEventService;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -111,5 +116,53 @@ class StaleOrderTimeoutJobIntegrationTest {
         assertThat(cancelled).isZero();
         assertThat(orderRepository.findById(filled.getId()).orElseThrow().getStatus())
                 .isEqualTo(OrderStatus.FILLED);
+    }
+
+    /**
+     * CASE-JOB-STALE-004：查詢僅掃描可取消狀態。
+     * Given: 過期 NEW／PARTIALLY_FILLED／FILLED／REJECTED／CANCELLED；When: cancel；Then: 只取消前兩種。
+     */
+    @Test
+    void JOB_STALE_004_onlyScansCancellableStatuses() {
+        OrderEntity staleNew = save(OrderStatus.NEW);
+        OrderEntity stalePartial = save(OrderStatus.PARTIALLY_FILLED);
+        OrderEntity staleFilled = save(OrderStatus.FILLED);
+        OrderEntity staleRejected = save(OrderStatus.REJECTED);
+        OrderEntity staleCancelled = save(OrderStatus.CANCELLED);
+        ageOrder(staleNew.getId());
+        ageOrder(stalePartial.getId());
+        ageOrder(staleFilled.getId());
+        ageOrder(staleRejected.getId());
+        ageOrder(staleCancelled.getId());
+
+        int cancelled = staleOrderCancellationService.cancelStaleOrders();
+
+        assertThat(cancelled).isEqualTo(2);
+        assertThat(orderRepository.findById(staleNew.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.CANCELLED);
+        assertThat(orderRepository.findById(stalePartial.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.CANCELLED);
+        assertThat(orderRepository.findById(staleFilled.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.FILLED);
+        assertThat(orderRepository.findById(staleRejected.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.REJECTED);
+        assertThat(orderRepository.findById(staleCancelled.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    /**
+     * CASE-JOB-EVENT-001：寫入一筆訂單事件並帶齊可選欄位。
+     * Given: 呼叫 log(42, CANCELLED, R001, …)；When: 查事件表；Then: 欄位對齊並持久化一列。
+     */
+    @Test
+    void JOB_EVENT_001_log_persistsEntityWithFields() {
+        orderEventService.log(42L, OrderEventType.CANCELLED, "R001", "timed out", "{\"src\":\"JOB-A\"}");
+
+        assertThat(orderEventRepository.findAll())
+                .anyMatch(e -> e.getOrderId().equals(42L)
+                        && e.getEvent() == OrderEventType.CANCELLED
+                        && "R001".equals(e.getRiskRuleCode())
+                        && "timed out".equals(e.getRejectReason())
+                        && "{\"src\":\"JOB-A\"}".equals(e.getPayloadJson()));
     }
 }

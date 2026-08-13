@@ -135,4 +135,16 @@ class FailedCommandServiceTest {
         assertThat(entity.getStatus()).isEqualTo(FailedCommandStatus.SUCCEEDED);
         assertThat(entity.getFailureReason()).contains("RISK_POSITION_LIMIT");
     }
+
+    /**
+     * CASE-JOB-API-006：失敗指令列表可回空陣列。
+     * Given: Repository 分頁回空；When: findByStatus(null)；Then: 空列表。
+     */
+    @Test
+    void JOB_API_006_findByStatus_null_returnsEmptyList() {
+        when(failedCommandRepository.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+        assertThat(service.findByStatus(null)).isEmpty();
+    }
 }

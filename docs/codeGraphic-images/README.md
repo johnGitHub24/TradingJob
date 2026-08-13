@@ -11,6 +11,6 @@ Script: EngineeringOS/eos-minimal/hooks/export-codeGraphic-images.ps1
 | `03-jobcd.svg` / `.png` | JOB-C/D |
 | `04-runtime.svg` / `.png` | Runtime |
 
-Re-run from project root:
+Re-run from project root (relative hook; do not use ClaudeCode / start.ps1):
 
-    & "d:\ClaudeCode\EngineeringOS\eos-minimal\hooks\export-codeGraphic-images.ps1" -ProjectRoot .
+    & "..\EngineeringOS\eos-minimal\hooks\export-codeGraphic-images.ps1" -ProjectRoot .

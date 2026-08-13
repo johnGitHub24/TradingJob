@@ -59,3 +59,15 @@ management:
 logging:
   level:
     com.trading.job: INFO
+# IntelliJ／bootRun 啟動後 Console 印常用 URL（見 StartupInfoLogger）
+startup:
+  info:
+    enabled: true
+    project-name: TradingJob
+    frontend: none
+    auth: false
+    h2: false
+    api-docs: true
+    probe: true
+    extra-paths: /api/v1/jobs/stale-order-cancellation,/api/v1/pnl-snapshots,/api/v1/failed-commands
+    related-urls: Engine|http://localhost:8081/actuator/health

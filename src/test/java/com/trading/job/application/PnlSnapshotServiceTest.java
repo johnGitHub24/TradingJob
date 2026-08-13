@@ -100,4 +100,16 @@ class PnlSnapshotServiceTest {
         assertThat(written).isZero();
         verify(pnlSnapshotRepository, never()).save(any());
     }
+
+    /**
+     * CASE-JOB-API-005：PnL 快照列表可回空陣列。
+     * Given: Repository 回空；When: findByDate(null)；Then: 空列表（日期預設今日）。
+     */
+    @Test
+    void JOB_API_005_findByDate_null_returnsEmptyList() {
+        when(pnlSnapshotRepository.findBySnapshotDate(LocalDate.now())).thenReturn(List.of());
+
+        assertThat(service.findByDate(null)).isEmpty();
+        verify(pnlSnapshotRepository).findBySnapshotDate(LocalDate.now());
+    }
 }
