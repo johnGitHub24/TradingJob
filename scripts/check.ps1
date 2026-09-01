@@ -1,4 +1,4 @@
-# TradingJob — verification entry (portable; Windows)
+﻿# TradingJob — verification entry (portable; Windows)
 # Thin: load env then gradlew check. Do not add demo/batch logic here.
 
 . "$PSScriptRoot\env.ps1"
